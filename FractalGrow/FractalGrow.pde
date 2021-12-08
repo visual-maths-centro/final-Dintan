@@ -1,71 +1,74 @@
-
+int timer = 0;
 ArrayList<Cell> cells;
 
-void setup () {
-  size(700, 700);
-  smooth();
 
+void setup(){
+  size(800,800);
+  background(0);
   cells = new ArrayList<Cell>();
-  
-  // Se agrega la primer celula que va en el centro
-  Cell centerCell = new Cell(width / 2.0, height / 2.0, 10); 
+  Cell centerCell = new Cell(width / 2.0, height / 2.0, 30, width / 2.0, height / 2.0); 
   cells.add(centerCell);
 }
 
-void draw () {
+void draw(){
   background(255);
-
-  addNewCell();
-  renderCells();
+  
+  if(timer > 1){
+    newCell();
+    timer = 0;
+  }
+  
+  cell();
+  
+  
+  timer++;
 }
 
-//------
 
-/**
- * Este metodo agrega una nueva celula al coral.
- */
-void addNewCell() {
-  
-  // 1. Se crea una nueva celula con posicion y radio aleatorio 
-  float x = random(width);
-  float y = random(height);
-  float radius = random(6, 10);
-  Cell newCell = new Cell(x, y, radius);
-  
-  // 2. Se obtiene la mas cercana
-  Cell nearest = getNearestCell(newCell);
-  
-  // 3. Se calcula la nueva posicion (aqui va tu codigo)
-  PVector newPosition;
-  newCell.position = newPosition;
 
-  cells.add(newCell);
-}
+void newCell(){
+  PVector rPos = new PVector(random(width),random(height));
+  PVector newPos = new PVector();
+  float cellDist = width + height;
+  PVector getNearestCell = new PVector();
+  float cellR = osc(frameCount,1,20)+0.5*9;
+  float getNearestCellR = 0;
 
-/**
- * Encuentra la celula mas cercana de la lista a una celula dada.
- */
-Cell getNearestCell (Cell aCell) {
-  Cell nearest = null;
-  float minDistance = 0;
-
-  for (Cell anotherCell : cells) {
-    float distance = aCell.distanceTo(anotherCell);
-
-    if (nearest == null || distance < minDistance) {
-      nearest = anotherCell;
-      minDistance = distance;
+  for (int i = 0; i < cells.size(); i++) {
+    Cell cellLength = cells.get(i);
+    PVector lastPos = new PVector(cellLength.position.x, cellLength.position.y);
+    float newDist = lastPos.dist(rPos);
+    if(newDist < cellDist){
+      cellDist = newDist;
+      getNearestCell.x = lastPos.x;
+      getNearestCell.y = lastPos.y;
+      getNearestCellR = cellLength.radius;
     }
   }
+  
+  
+ newPos = rPos.copy();
+ newPos.sub(getNearestCell);
+ 
+  float Rad = cellR + getNearestCellR;
+  float rangeBetweenCells = Rad/cellDist;
+ 
 
-  return nearest;
+  
+  cells.add(new Cell(getNearestCell.x+newPos.x*rangeBetweenCells, getNearestCell.y+newPos.y*rangeBetweenCells, cellR, getNearestCell.x, getNearestCell.y)); 
+
 }
 
-/**
- * Dibuja todas las celulas llamando el metodo render de cada una de ellas
- */
-void renderCells() {
-  for (Cell aCell : cells) {
-    aCell.render();
+void cell(){
+  for (Cell actualCell : cells) {
+    actualCell.render();
   }
+}
+
+float osc(float x, float amp, float period) {
+  return amp* sin(x* (TWO_PI / period));
+}
+
+void keyPressed(){
+  saveFrame("fractarGrowth-##.png");
 }
